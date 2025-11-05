@@ -14,7 +14,7 @@ import fileUpload from "express-fileupload";
 const PORT = process.env.PORT;
 
 // mogodb connection
-await connectMongodb(process.env.mongodbUrl);
+await connectMongodb(process.env.MONGODBURL);
 
 // middleware
 app.use(express.json());
