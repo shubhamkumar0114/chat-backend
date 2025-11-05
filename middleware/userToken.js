@@ -1,15 +1,22 @@
-import jwt from "jsonwebtoken"
-export async function generateToken(userId , res){
-    try {
-        const token = jwt.sign({userId} , process.env.SECRETPASS , {expiresIn: "1d"})
-        res.cookie("token" , token)
-        return token
-    } catch (error) {
-        return console.log("Error in token generate")
-    }
+import jwt from "jsonwebtoken";
+export async function generateToken(userId, res) {
+  try {
+    const token = jwt.sign({ userId }, process.env.SECRETPASS, {
+      expiresIn: "1d",
+    });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true, // HTTPS pe hi kaam kare
+      sameSite: "None", // cross-site allowed
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+    return token;
+  } catch (error) {
+    return console.log("Error in token generate");
+  }
 }
 
-export async function userAuth(req , res , next) {
+export async function userAuth(req, res, next) {
   try {
     const authHeader = req.headers["authorization"];
     if (!authHeader) return res.status(401).json({ error: "Token missing" });
@@ -27,6 +34,6 @@ export async function userAuth(req , res , next) {
       next();
     });
   } catch (error) {
-    return res.status(500).json({error: error.message})
+    return res.status(500).json({ error: error.message });
   }
 }
