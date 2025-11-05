@@ -34,6 +34,9 @@ app.use(
     temFileDir: "/temp/",
   })
 );
+app.get("/", (req, res) => {
+  res.send("Backend is running successfully 🚀");
+});
 
 app.use("/api/user", userRouter);
 app.use("/api/message", messageRouter);
