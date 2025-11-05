@@ -23,9 +23,9 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
   cors({
-    origin: "http://localhost:5174",
+    origin: "https://chat-apps-ten.vercel.app",
     credentials: true,
-    methods: ["GET", "POST","PUT"],
+    methods: ["GET", "POST", "PUT"],
   })
 );
 app.use(
