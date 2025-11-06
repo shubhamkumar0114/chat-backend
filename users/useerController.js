@@ -76,13 +76,7 @@ export const loginUser = async (req, res) => {
 
     if (user) {
       const token = await generateToken(user._id, res);
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true, // HTTPS pe hi kaam kare
-        sameSite: "None", // cross-site allowed
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      });
-
+      res.cookie("token", token);
       return res.status(200).json({
         msg: "Login Successfully",
         user, token
@@ -142,7 +136,7 @@ export const ForgetPassword = async (req, res) => {
     await user.save();
 
     // Reset link
-    const resetUrl = `http://localhost:5174/resetpassword/${resetToken}`;
+    const resetUrl = `http://localhost:5173/resetpassword/${resetToken}`;
 
     // Send email (use real SMTP credentials in production)
     const transporter = nodemailer.createTransport({

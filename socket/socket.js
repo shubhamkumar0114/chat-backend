@@ -7,14 +7,13 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://chat-app-silk-kappa.vercel.app",
+    origin: " http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
 
 // ✅ Global socket access
 app.set("io", io);
-
 
 let onlineUsers = new Map(); // userId -> socketId
 // jb client connect kare
@@ -53,4 +52,4 @@ io.on("connection", (socket) => {
   });
 });
 
-export {app , io , server}
+export { app, io, server };

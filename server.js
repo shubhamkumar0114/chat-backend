@@ -23,7 +23,7 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
   cors({
-    origin: "https://chat-app-silk-kappa.vercel.app",
+    origin: " http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT"],
   })
