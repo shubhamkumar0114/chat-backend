@@ -4,12 +4,7 @@ export async function generateToken(userId, res) {
     const token = jwt.sign({ userId }, process.env.SECRETPASS, {
       expiresIn: "1d",
     });
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true, // HTTPS pe hi kaam kare
-      sameSite: "None", // cross-site allowed
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
+   
     return token;
   } catch (error) {
     return console.log("Error in token generate");
