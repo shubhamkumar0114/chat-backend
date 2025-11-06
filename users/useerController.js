@@ -78,7 +78,7 @@ export const loginUser = async (req, res) => {
       const token = await generateToken(user._id, res);
       res.cookie("token", token, {
         httpOnly: true,
-        // secure: true, // HTTPS pe hi kaam kare
+        secure: true, // HTTPS pe hi kaam kare
         sameSite: "None", // cross-site allowed
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       });
