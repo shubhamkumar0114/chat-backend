@@ -4,19 +4,24 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { v2 as cloudinary } from "cloudinary";
+import { Resend } from "resend";
+import { error } from "console";
+import { url } from "inspector";
 
+// Create a new user
 export const createUser = async (req, res) => {
   try {
-    const { name, username, email, password } = req.body;
+    const { name, username, email, phone, password } = req.body;
 
-    if (!name || !username || !email || !password) {
-      return res.status(400).json({ error: "All fields required" });
+    if (!name || !username || !email || !phone || !password) {
+      return res.status(404).json({ error: "All fields required" });
+    }
+
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(404).json({ error: "No image uploads" });
     }
 
     const { image } = req.files;
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).json({ error: "No image uploads" });
-    }
 
     const result = await cloudinary.uploader.upload(image.tempFilePath, {
       folder: "user_profiles",
@@ -37,6 +42,7 @@ export const createUser = async (req, res) => {
       name,
       username,
       email,
+      phone,
       password: hashPassword,
       image: {
         url: result?.secure_url,
@@ -53,6 +59,7 @@ export const createUser = async (req, res) => {
   }
 };
 
+// Login user
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -64,14 +71,14 @@ export const loginUser = async (req, res) => {
     // Find existing user
     const existingUser = await USER.findOne({ email });
     if (!existingUser) {
-      return res.status(400).json({ error: "All ready user exist" });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // check user is present
     const user = await USER.findOne({ email });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ error: "Email & Password not match" });
+      return res.status(404).json({ error: "Email & Password not match" });
     }
 
     if (user) {
@@ -79,7 +86,8 @@ export const loginUser = async (req, res) => {
       res.cookie("token", token);
       return res.status(200).json({
         msg: "Login Successfully",
-        user, token
+        user,
+        token,
       });
     }
   } catch (error) {
@@ -91,9 +99,10 @@ export const getAllUsers = async (req, res) => {
   try {
     const loginUser = req.user.userId;
 
-    // store phone number
-    // await UserGroupConversation.find()
     const users = await USER.find({ _id: { $ne: loginUser } });
+    if (!users) {
+      return res.status(400).json({ error: "No users" });
+    }
     return res.status(200).json({ user: users });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -101,16 +110,31 @@ export const getAllUsers = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  console.log("logout");
+  res.clearCookie("token");
 };
 
 export const updateUsers = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, username, email } = req.body;
+    const { name, username } = req.body;
+
+    const image = req.files?.image;
+
+    let imageData ;
+    if (image) {
+      const upload = await cloudinary.uploader.upload(image.tempFilePath, {
+        folder: "user_profiles",
+        resource_type: "image",
+      });
+      imageData = {
+        public_id: upload.public_id,
+        url: upload.secure_url,
+      };
+    }
+
     const userUpdate = await USER.findByIdAndUpdate(
       { _id: id },
-      { $set: { name, username, email } },
+      { $set: { name, username, image: imageData } },
       { new: true }
     );
     if (userUpdate)
@@ -138,23 +162,18 @@ export const ForgetPassword = async (req, res) => {
     // Reset link
     const resetUrl = `http://localhost:5173/resetpassword/${resetToken}`;
 
-    // Send email (use real SMTP credentials in production)
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "shubhamjha6299@gmail.com",
-        pass: "fudk qyrs nuaj kyry",
-      },
-    });
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
-    await transporter.sendMail({
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
       to: user.email,
-      subject: "Password Reset Request",
-      html: `<Link to={"/"}>Click here to reset password: <a href="${resetUrl}">${resetUrl}</a></Link>`,
+      subject: "Password Reset",
+      html: `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>`,
     });
 
     res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ error: error?.message });
   }
 };
@@ -180,5 +199,58 @@ export const resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const sendOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(404).json({ error: "filed required" });
+    }
+
+    const existUser = await USER.findOne({ phone });
+    if (!existUser) {
+      return res.status(404).json({ error: "Not found user" });
+    }
+
+    // Geneate otp
+    const otp = Math.floor(1000 + Math.random() * 9000);
+    const expireOtp = Date.now() + 5 * 60 * 1000;
+
+    // find user
+    const user = await USER.findOne({ phone });
+
+    await USER.findOneAndUpdate(
+      { phone: user?.phone },
+      { $set: { otp, expireOtp } },
+      { new: true }
+    );
+    return res.status(200).json({ msg: "saved otp", otp });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const verifyOtp = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const user = await USER.findOne({ otp });
+
+    if (!user) {
+      return res.status(404).json({ error: "Not verify" });
+    }
+
+    if (user.otp === otp) {
+      const token = await generateToken(user._id, res);
+      res.cookie("token", token);
+      return res.status(200).json({
+        msg: "Otp verify success",
+        user,
+        token,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

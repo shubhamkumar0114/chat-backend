@@ -12,7 +12,7 @@ import connectMongodb from "./db_connection/db.js";
 import { v2 as cloudinary } from "cloudinary";
 import fileUpload from "express-fileupload";
 const PORT = process.env.PORT;
-
+ 
 // mogodb connection
 await connectMongodb(process.env.MONGODBURL);
 
@@ -21,11 +21,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(bodyParser.json());
+
 app.use(
   cors({
-    origin: " http://localhost:5173",
-    credentials: true,
+    origin: "https://chat-app-blond-62.vercel.app",
     methods: ["GET", "POST", "PUT"],
+    credentials: true,
   })
 );
 app.use(
@@ -34,9 +35,7 @@ app.use(
     temFileDir: "/temp/",
   })
 );
-app.get("/", (req, res) => {
-  res.send("Backend is running successfully 🚀");
-});
+
 
 app.use("/api/user", userRouter);
 app.use("/api/message", messageRouter);

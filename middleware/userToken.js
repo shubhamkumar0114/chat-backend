@@ -16,10 +16,8 @@ export async function userAuth(req, res, next) {
     const authHeader = req.headers["authorization"];
     if (!authHeader) return res.status(401).json({ error: "Token missing" });
     // const token = req.cookies.token;
-    const token = authHeader.split(" ")[1]; // "Bearer <token>"
-
-    // Header format: "Authorization: Bearer <token>"
-
+    const token = authHeader.split(" ")[1] || req.cookies.token; // "Bearer <token>"
+  
     if (!token) return res.status(401).json({ message: "No token provided" });
 
     jwt.verify(token, process.env.SECRETPASS, (err, decoded) => {

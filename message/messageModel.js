@@ -14,7 +14,16 @@ const messageSchema = new mongoose.Schema(
     },
     message: {
       type: String,
-      required: true,
+    },
+    image: {
+      public_id: {
+        type: String,
+        require: false,
+      },
+      url: {
+        type: String,
+        require: false,
+      },
     },
   },
   { timestamps: true } // createdAt, updatedAt automatically save ho jayega

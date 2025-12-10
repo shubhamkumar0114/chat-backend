@@ -7,49 +7,61 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: " http://localhost:5173",
-    methods: ["GET", "POST"],
+    origin: "https://chat-app-blond-62.vercel.app",
+    methods: ["GET", "POST", "DELETE"],
+    credentials: true,
   },
 });
 
 // ✅ Global socket access
 app.set("io", io);
 
-let onlineUsers = new Map(); // userId -> socketId
+const users = {}
 // jb client connect kare
 io.on("connection", (socket) => {
   console.log("user connected", socket.id);
 
-  // listen event from client
-  socket.on("message", (msg) => {
-    console.log("message recived ", msg);
-
-    // sabhi clients bhej do
-    io.emit("message", msg);
+  // Room join
+  socket.on("joinRoom", (userId) => {
+    socket.join(userId);
+    console.log(`User ${socket.id} joined room ${userId}`);
   });
 
-  // 🔹 user online aaya
-  socket.on("user-online", (userId) => {
-    onlineUsers.set(userId, socket.id);
-    io.emit("get-online-users", Array.from(onlineUsers.keys()));
+  socket.on("leaveRoom", ( userId) => {
+    socket.leave(userId);
   });
 
-  // 🔹 user disconnect hua
-  socket.on("disconnect", () => {
-    for (let [userId, sockId] of onlineUsers.entries()) {
-      if (sockId === socket.id) {
-        onlineUsers.delete(userId);
-        break;
-      }
-    }
-    io.emit("get-online-users", Array.from(onlineUsers.keys()));
-    console.log("User disconnected:", socket.id);
-  });
+  // Typing show
+  socket.on("typing", ({senderId , receiverId})=>{
+    io.to(receiverId).emit("typing", senderId)
+  })
+
+  socket.on("stopTyping", ({senderId , receiverId})=>{
+     io.to(receiverId).emit("stopTyping", senderId);
+  })
+
+  const userId = socket.handshake.query.userId
+  if(userId){
+    users[userId] = socket.id
+  }
+  io.emit("getOnlineUsers", Object.keys(users));
+  console.log(users)
+  
+
+  // message emit to room
+  socket.on("message", (msg)=> {
+    const { receiverId } = msg;
+    io.to(receiverId).emit("message", msg);
+  })
 
   // Disconnect events
   socket.on("disconnect", () => {
     console.log("user disconnect", socket.id);
+    delete users[userId]
+    io.emit("getOnlineUsers", Object.keys(users));
   });
+
+ 
 });
 
 export { app, io, server };

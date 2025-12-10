@@ -15,6 +15,11 @@ const userSchema = mongoose.Schema(
       require: true,
       unique: true,
     },
+    phone:{
+      type: Number,
+      require: true,
+      unique: true,
+    },
     password: {
       type: String,
       require: true,
@@ -23,6 +28,12 @@ const userSchema = mongoose.Schema(
       type: String,
     },
     resetPasswordExpire: {
+      type: Date,
+    },
+    otp: {
+      type: String,
+    },
+    expireOtp: {
       type: Date,
     },
     image: {
