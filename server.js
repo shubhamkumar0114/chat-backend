@@ -24,8 +24,8 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: "https://chat-app-blond-62.vercel.app",
-    methods: ["GET", "POST", "PUT"],
+    origin: [ "http://localhost:5173", "https://chat-app-blond-62.vercel.app"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
