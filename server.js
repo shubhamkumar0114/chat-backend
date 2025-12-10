@@ -36,6 +36,11 @@ app.use(
   })
 );
 
+app.get("/", (req, res) => {
+  res.send("Backend is running...");
+});
+
+
 
 app.use("/api/user", userRouter);
 app.use("/api/message", messageRouter);
