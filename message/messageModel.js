@@ -15,6 +15,16 @@ const messageSchema = new mongoose.Schema(
     message: {
       type: String,
     },
+    video: {
+      public_id: {
+        type: String,
+        require: false,
+      },
+      url: {
+        type: String,
+        require: false,
+      },
+    },
     image: {
       public_id: {
         type: String,

@@ -128,3 +128,13 @@ export const uploadFile = async (req, res) => {
     console.log(error);
   }
 };
+
+// delete message
+export const deleteMessage = async(req , res)=>{
+  try {
+    const {msgId} = req.params;
+    console.log(msgId);
+  } catch (error) {
+    console.log(error)
+  }
+}
